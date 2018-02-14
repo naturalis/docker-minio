@@ -1,0 +1,44 @@
+## Global compose framework for minio
+version: '3'
+
+services:
+
+  minio:
+    image: minio/minio
+    restart: on-failure:5
+    command: "server /data"
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-12345}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-12345678}
+    volumes:
+    - "/data/s3-minio-test:/data"
+    networks:
+      - web
+      - default
+    labels:
+      - "traefik.backend=naturalis-minio"
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.port=9000"
+      - ${MINIO_URL_CONFIG:-traefik.frontend.rule=Host:s3-minio-test.naturalis.nl}
+
+  traefik:
+    image: traefik
+    restart: on-failure:5
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - web
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${TRAEFIK_TOML_FILE:-./traefik.dev.toml}:/traefik.toml
+      - ${ACME_JSON:-./acme.json}:/acme.json
+    container_name: traefik
+
+# run docker network create web before
+networks:
+  web:
+    external: true
+
+
