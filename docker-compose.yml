@@ -21,6 +21,8 @@ services:
       - "traefik.enable=true"
       - "traefik.port=9000"
       - ${MINIO_URL_CONFIG:-traefik.frontend.rule=Host:s3-minio-test.naturalis.nl}
+### when using wildcard (lets encrypt is not yet issueing wildcards
+###      - ${MINIO_URL_CONFIG:-traefik.frontend.rule=HostRegexp:s3-minio-test.naturalis.nl,{subdomain:[a-z]+}.s3-minio-test.naturalis.nl}
 
   traefik:
     image: traefik
