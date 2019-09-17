@@ -1,12 +1,19 @@
 ## Global compose framework for minio
-version: '3'
+version: '3.4'
+
+x-logging:
+  &default-logging
+  options:
+    max-size: '10m'
+    max-file: '5'
+  driver: json-file
 
 services:
-
   minio:
-    image: minio/minio:64d028295177
-    restart: on-failure:5
+    image: minio/minio:RELEASE.2019-09-11T19-53-16Z
+    restart: unless-stopped
     command: "server /data"
+    logging: *default-logging
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-12345}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-12345678}
@@ -20,23 +27,30 @@ services:
       - "traefik.docker.network=web"
       - "traefik.enable=true"
       - "traefik.port=9000"
-      - ${MINIO_URL_CONFIG:-traefik.frontend.rule=Host:s3-minio-test.naturalis.nl}
+#      - ${MINIO_URL_CONFIG:-traefik.frontend.rule=Host:s3-minio-test.naturalis.nl}
 ### when using wildcard (lets encrypt is not yet issueing wildcards
-###      - ${MINIO_URL_CONFIG:-traefik.frontend.rule=HostRegexp:s3-minio-test.naturalis.nl,{subdomain:[a-z]+}.s3-minio-test.naturalis.nl}
+###
+      - ${MINIO_URL_CONFIG:-traefik.frontend.rule=HostRegexp:s3-minio-test.naturalis.nl,{subdomain:[a-z]+}.s3-minio-test.naturalis.nl}
 
   traefik:
-    image: traefik:1.7.16
-    restart: on-failure:5
+    image: traefik:2.0.0
+    restart: unless-stopped
+    environment:
+      - TRANSIP_PRIVATE_KEY_PATH=/.transip.key
+      - TRANSIP_ACCOUNT_NAME=${TRANSIP_ACCOUNT_NAME:-naturalis}
     ports:
       - 80:80
       - 443:443
+      - 8081:8080
     networks:
       - web
+      - default
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${TRAEFIK_TOML_FILE:-./traefik.dev.toml}:/traefik.toml
-      - ${ACME_JSON:-./acme.json}:/acme.json
-    container_name: traefik
+      - ${TRAEFIK_TOML_FILE:-./traefik.toml}:/traefik.toml
+      - ./.transip.key:/.transip.key
+      - ./acme.json:/acme.json
+    logging: *default-logging
 
 # run docker network create web before
 networks:
