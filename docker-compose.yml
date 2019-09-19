@@ -32,11 +32,9 @@ services:
       - traefik.http.routers.minio.entrypoints=https
       - traefik.http.routers.minio.tls.certresolver=transip
       - traefik.http.routers.minio.tls=true
+      - traefik.http.routers.minio.tls.domains[0].main=${MINIO_URL_DOMAIN:-s3-minio-test.naturalis.nl}
+      - traefik.http.routers.minio.tls.domains[0].sans=*.${MINIO_URL_DOMAIN:-s3-minio-test.naturalis.nl}
       - traefik.http.routers.minio.rule=${MINIO_URL_CONFIG:-Host(`s3-minio-test.naturalis.nl`)}
-
-### when using wildcard (lets encrypt is not yet issueing wildcards
-###
-#      - ${MINIO_URL_CONFIG:-traefik.frontend.rule=HostRegexp:s3-minio-test.naturalis.nl,{subdomain:[a-z]+}.s3-minio-test.naturalis.nl}
 
   traefik:
     image: traefik:2.0.0
