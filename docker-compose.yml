@@ -30,7 +30,7 @@ services:
       - traefik.http.middlewares.minio-redirectscheme.redirectscheme.scheme=https
       - traefik.http.middlewares.minio-redirectscheme.redirectscheme.permanent=true
       - traefik.http.routers.minio.entrypoints=https
-      - traefik.http.routers.minio.tls.certresolver=transip
+      - traefik.http.routers.minio.tls.certresolver=default
       - traefik.http.routers.minio.tls=true
       - traefik.http.routers.minio.tls.domains[0].main=${MINIO_URL_DOMAIN:-s3-minio-test.naturalis.nl}
       - traefik.http.routers.minio.tls.domains[0].sans=*.${MINIO_URL_DOMAIN:-s3-minio-test.naturalis.nl}
@@ -39,9 +39,6 @@ services:
   traefik:
     image: traefik:2.0.0
     restart: unless-stopped
-    environment:
-      - TRANSIP_PRIVATE_KEY_PATH=/.transip.key
-      - TRANSIP_ACCOUNT_NAME=${TRANSIP_ACCOUNT_NAME:-naturalis}
     ports:
       - 80:80
       - 443:443
@@ -52,7 +49,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${TRAEFIK_TOML_FILE:-./traefik.toml}:/traefik.toml
-      - ./.transip.key:/.transip.key
       - ./acme.json:/acme.json
     logging: *default-logging
 
